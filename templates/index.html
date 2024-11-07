@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>AI Website Generator</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #f8f9fa;
+      }
+      .container {
+        max-width: 800px;
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+      }
+      #loading-message {
+        display: none;
+        padding: 20px;
+        border-radius: 5px;
+        margin-top: 20px;
+      }
+      .warning1 { background-color: var(--bs-warning-bg-subtle); }
+      .success2 { background-color: var(--bs-success-bg-subtle); }
+      .danger3 { background-color: var(--bs-danger-bg-subtle); }
+      .example-btn {
+        margin: 5px;
+        white-space: normal;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="mb-4">AI Website Generator</h1>
+      <p class="lead">Generate beautiful websites using Cloudflare AI</p>
+      
+      <form id="generate-form" action="/" method="post">
+        <div class="mb-3">
+          <label for="input_text" class="form-label">Enter your website description:</label>
+          <textarea name="input_text" id="input_text" class="form-control" rows="5" required></textarea>
+        </div>
+        
+        <div class="mb-3">
+          <p>Example prompts:</p>
+          <button type="button" class="btn btn-light example-btn" id="exampleQuery">A website for a horse riding company in Roybon, France</button>
+          <button type="button" class="btn btn-light example-btn" id="exampleQuery2">The website for hair salon Hair Force One in St Marcellin, France</button>
+          <button type="button" class="btn btn-light example-btn" id="exampleQuery3">Le site internet de l'office du tourisme de Roybon, France</button>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Generate Website</button>
+      </form>
+
+      <div id="loading-message"></div>
+    </div>
+
+    <script>
+      $(document).ready(function() {
+        // Example query buttons
+        $('.example-btn').click(function() {
+          $('#input_text').val($(this).text());
+        });
+
+        // Form submission
+        $("#generate-form").on("submit", function(e) {
+          e.preventDefault();
+          $("#loading-message").html(
+            '<p>Generating website using Cloudflare AI...</p>' +
+            '<p id="estimated-time">Estimated time: <span id="countdown">{{ avg_time|round(1) }}</span> seconds</p>' +
+            '<div class="spinner-border text-primary" role="status">' +
+            '<span class="visually-hidden">Loading...</span></div>'
+          );
+          $("#loading-message").removeClass("success2 danger3").addClass("warning1").show();
+
+          $.ajax({
+            url: "/generate",
+            method: "POST",
+            data: $(this).serialize(),
+            success: function(response) {
+              $("#loading-message")
+                .removeClass("warning1 danger3")
+                .addClass(response.status === "success" ? "success2" : "danger3")
+                .html(response.message);
+            },
+            error: function() {
+              $("#loading-message")
+                .removeClass("warning1 success2")
+                .addClass("danger3")
+                .html("An error occurred. Please try again.");
+            }
+          });
+        });
+
+        // Countdown timer
+        function startCountdown() {
+          const countdownElement = document.getElementById("countdown");
+          let remainingSeconds = parseInt(countdownElement.textContent);
+          const intervalId = setInterval(() => {
+            remainingSeconds--;
+            countdownElement.textContent = remainingSeconds;
+            if (remainingSeconds <= 0) clearInterval(intervalId);
+          }, 1000);
+        }
+
+        $("#generate-form").on("submit", startCountdown);
+      });
+    </script>
+  </body>
+</html>
